@@ -1,7 +1,7 @@
 <template>
   <div class="wrap">
     <div class="panel">
-      <div class="badge">BACK-OFFICE</div>
+      <div class="badge">管理后台</div>
       <h2>管理员登录</h2>
       <p class="muted">商品审核、强制下架、订单总览</p>
       <el-form label-position="top">

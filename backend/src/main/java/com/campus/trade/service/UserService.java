@@ -23,14 +23,21 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     /**
-     * 批量查询用户名，用于前台展示卖家。
+     * 批量查询卖家展示名：优先 real_name，空则回退 username。
      */
     public Map<Long, String> usernameMap(Collection<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyMap();
         }
         return userMapper.selectBatchIds(ids).stream()
-                .collect(Collectors.toMap(User::getId, User::getUsername, (a, b) -> a));
+                .collect(Collectors.toMap(User::getId, this::displayName, (a, b) -> a));
+    }
+
+    private String displayName(User u) {
+        if (StrUtil.isNotBlank(u.getRealName())) {
+            return u.getRealName().trim();
+        }
+        return u.getUsername() != null ? u.getUsername() : "";
     }
 
     public User findByName(String username) {
@@ -54,6 +61,7 @@ public class UserService {
         }
         User u = new User();
         u.setUsername(username.trim());
+        u.setRealName("");
         u.setPassword(passwordEncoder.encode(password));
         u.setStudentId(studentId.trim());
         u.setPhone(phone.trim());

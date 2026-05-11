@@ -2,14 +2,26 @@
   <div class="home">
     <el-row :gutter="16">
       <el-col :md="17" :xs="24">
-        <el-carousel height="260px" class="banner">
-          <el-carousel-item>
-            <div class="slide" :style="{ backgroundImage: 'url(/ui/banner-1.png)' }" />
-          </el-carousel-item>
-          <el-carousel-item>
-            <div class="slide" :style="{ backgroundImage: 'url(/ui/banner-2.png)' }" />
-          </el-carousel-item>
-        </el-carousel>
+        <div class="section-head banner-head">
+          <i class="el-icon-picture-outline" />
+          <span>热门推荐</span>
+          <span class="sub">点击轮播图查看商品详情</span>
+        </div>
+        <div v-loading="bannerLoad" class="banner-wrap">
+          <el-carousel v-if="bannerList.length" height="260px" class="banner" :interval="5000" arrow="hover">
+            <el-carousel-item v-for="b in bannerList" :key="'b' + b.id">
+              <div class="carousel-slide" @click="openDetail(b.id)">
+                <el-image :src="img(b.imageUrl)" fit="cover" class="carousel-img" />
+                <div class="carousel-cap">
+                  <span class="carousel-title">{{ b.title }}</span>
+                  <span class="carousel-price">¥{{ b.price }}</span>
+                  <span class="carousel-seller">{{ b.sellerUsername || '校友' }}</span>
+                </div>
+              </div>
+            </el-carousel-item>
+          </el-carousel>
+          <div v-else-if="!bannerLoad" class="banner-empty">暂无在售商品用于轮播，请查看下方「热门商品」列表。</div>
+        </div>
 
         <div class="section-head">
           <i class="el-icon-star-on" />
@@ -88,6 +100,8 @@ export default {
   data() {
     return {
       categories: [],
+      bannerList: [],
+      bannerLoad: false,
       list: [],
       latest: [],
       latestLoad: false,
@@ -104,6 +118,7 @@ export default {
   },
   created() {
     this.fetchCategories()
+    this.loadBanner()
     this.loadLatest()
     this.load()
   },
@@ -111,15 +126,35 @@ export default {
     img(u) {
       return productImageSrc(u)
     },
+    async loadBanner() {
+      this.bannerLoad = true
+      try {
+        const res = await request.get('/products/search', {
+          params: { pageNum: 1, pageSize: 6 }
+        })
+        const d = res && res.data
+        this.bannerList = (d && d.list) ? d.list.slice(0, 6) : []
+      } catch (e) {
+        this.bannerList = []
+      } finally {
+        this.bannerLoad = false
+      }
+    },
     async fetchCategories() {
-      const res = await request.get('/categories')
-      this.categories = res.data || []
+      try {
+        const res = await request.get('/categories')
+        this.categories = (res && res.data) || []
+      } catch (e) {
+        this.categories = []
+      }
     },
     async loadLatest() {
       this.latestLoad = true
       try {
         const res = await request.get('/products/latest', { params: { limit: 3 } })
-        this.latest = res.data || []
+        this.latest = (res && res.data) || []
+      } catch (e) {
+        this.latest = []
       } finally {
         this.latestLoad = false
       }
@@ -130,8 +165,12 @@ export default {
         const res = await request.get('/products/search', {
           params: { pageNum: this.pageNum, pageSize: this.pageSize }
         })
-        this.list = res.data.list || []
-        this.total = res.data.total || 0
+        const d = res && res.data
+        this.list = (d && d.list) || []
+        this.total = (d && d.total) || 0
+      } catch (e) {
+        this.list = []
+        this.total = 0
       } finally {
         this.loading = false
       }
@@ -150,16 +189,74 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.banner-head {
+  margin-bottom: 8px;
+  .sub {
+    margin-left: 10px;
+    font-size: 13px;
+    font-weight: 400;
+    color: #909399;
+  }
+}
+.banner-wrap {
+  min-height: 120px;
+  margin-bottom: 18px;
+}
 .banner {
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 18px;
 }
-.slide {
-  height: 260px;
-  background-size: cover;
-  background-position: center;
+.banner-empty {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f2f5;
   border-radius: 8px;
+  color: #606266;
+  font-size: 14px;
+}
+.carousel-slide {
+  height: 260px;
+  cursor: pointer;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.carousel-img {
+  width: 100%;
+  height: 100%;
+}
+.carousel-cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 12px 16px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
+  color: #fff;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+}
+.carousel-title {
+  font-weight: 700;
+  font-size: 16px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carousel-price {
+  color: #ffd04b;
+  font-weight: 800;
+  font-size: 18px;
+}
+.carousel-seller {
+  font-size: 13px;
+  opacity: 0.95;
 }
 .section-head {
   font-size: 18px;

@@ -9,9 +9,9 @@
 | 学生 | `zhangsan` | `123456` | 亦可使用 `lisi`、`wangwu`、`zhaoliu`、`sunqi` |
 | 管理员 | `admin` | `admin123` | `auditor02` / `admin123` |
 
-初始化 SQL 中包含 **≥20 条商品**（多状态：在售、待审核、已拒绝、已下架）；并增加截图中的 **`user1` / `user123`** 测试账号。
+初始化 SQL 中包含 **≥20 条商品**（多状态：在售、待审核、已拒绝、已下架）；并增加截图中的 **`user1` / `user123`** 测试账号。商品封面使用 `frontend/public/demo/item-*.svg` 演示图；首页轮播为接口返回的在售热门商品，点击即打开详情。
 
-轮播横幅图已从你提供的答辩截图拷贝到前端 `frontend/public/ui/banner-*.png`。若你已建过旧库，请执行 `database/schema_alter_order_meta.sql` 为订单表增加「收货地址、电话、支付方式」等字段以匹配新版结算表单。
+若你已建过旧库：请按需执行 `database/schema_alter_order_meta.sql`、`database/schema_alter_user_real_name.sql`、`database/patch_product_demo_images.sql`。
 
 ## 环境要求
 
@@ -32,7 +32,9 @@ mysql -u root -p < database/data.sql
 # 或：mysql -u root -p123456 < database/schema.sql && mysql -u root -p123456 < database/data.sql
 ```
 
-默认数据源配置见 `backend/src/main/resources/application.yml`（当前示例为 `root` / `123456`、库名 `campus_trade`）。若你的账号或密码不同，请改 `username` / `password` / `url`。
+默认数据源配置见 `backend/src/main/resources/application.yml`（当前示例为 `root` / `123456`、库名 `campus_trade`，主机为 **`127.0.0.1`** 以避免 macOS 上 `localhost`→IPv6 与监听不一致）。若你的账号或密码不同，请改 `username` / `password` / `url`。
+
+**若前端一律提示「系统繁忙」或后端日志为 `Connection refused`：** 多半是 MySQL **未监听 TCP 3306**（例如在「忘记密码」时用 **`--skip-grant-tables`** 启动过 `mysqld`，会连带 `skip_networking=ON`）。请先正常停库再启动，例如：`mysql.server stop` 后执行 `mysql.server start`（Homebrew 安装路径下 `bin/mysql.server`），再用 `mysql -u root -p -e "SHOW VARIABLES LIKE 'port'; SHOW VARIABLES LIKE 'skip_networking';"` 确认 `port=3306`、`skip_networking=OFF`，然后**重启 Spring Boot**。
 
 ## 2. 启动后端（默认端口 8080，上下文 `/api`）
 
@@ -54,6 +56,17 @@ npm run serve
 浏览器打开：`http://localhost:8081/#/`（Hash 路由，免服务器 History 配置）。
 
 生产构建：`npm run build`，将 `frontend/dist` 部署到 Nginx 等静态资源服务器，并将 `/api` 反向代理到 `http://<后端主机>:8080`。
+
+## 3.1 一键启动脚本（本机）
+
+在项目根目录执行：
+
+```bash
+chmod +x scripts/dev-start.sh
+./scripts/dev-start.sh
+```
+
+脚本会检测 `java` / `mvn` / `node` / `npm`、尝试连接 MySQL（按 `application.yml` 解析地址与账号）、检查 8080/8081 占用；后台启动后端与前端，日志在 `scripts/logs/`。按 **Ctrl+C** 会尝试结束已启动进程。若 `mysql` 命令不存在，会跳过数据库检测但仍启动服务。
 
 ## 4. 推荐演示路径（与论文流程一致）
 

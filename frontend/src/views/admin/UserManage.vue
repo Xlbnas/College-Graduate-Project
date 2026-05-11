@@ -3,7 +3,8 @@
     <h2>用户管理</h2>
     <el-table :data="rows" v-loading="loading">
       <el-table-column prop="id" label="ID" width="70" />
-      <el-table-column prop="username" label="用户名" />
+      <el-table-column prop="username" label="登录名" />
+      <el-table-column prop="realName" label="展示姓名" />
       <el-table-column prop="studentId" label="学号" />
       <el-table-column prop="phone" label="手机" />
       <el-table-column prop="status" label="状态" width="90">

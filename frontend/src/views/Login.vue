@@ -15,9 +15,13 @@
           还没有账号？<router-link to="/register" class="link">立即注册</router-link>
         </p>
         <div class="demo-tip">
-          <div class="demo-title">测试账号：</div>
-          <div>管理员：admin / admin123</div>
-          <div>普通用户：user1 / user123 或 zhangsan / 123456</div>
+          <div class="demo-title">测试账号</div>
+          <div>
+            管理员（后台审核）请点
+            <router-link to="/admin/login" class="link">管理登录</router-link>
+            ：<strong>admin</strong> / <strong>admin123</strong>
+          </div>
+          <div class="mt-line">本页为用户登录：<strong>zhangsan</strong> / <strong>123456</strong>，或 <strong>user1</strong> / <strong>user123</strong></div>
         </div>
       </el-form>
     </div>
@@ -110,5 +114,8 @@ export default {
   font-weight: 700;
   margin-bottom: 6px;
   color: #303133;
+}
+.mt-line {
+  margin-top: 8px;
 }
 </style>

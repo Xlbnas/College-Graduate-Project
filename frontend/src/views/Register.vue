@@ -1,7 +1,7 @@
 <template>
   <div class="auth-bg">
     <div class="panel">
-      <h1 class="hero-title page-h1">加入优品校园</h1>
+      <h1 class="hero-title page-h1">注册校园二手账号</h1>
       <p class="sub">学号 + 手机号完成实名登记，一起安全交易</p>
       <el-form :model="form" :rules="rules" ref="f" label-position="top">
         <el-form-item label="用户名" prop="username">

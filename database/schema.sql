@@ -13,7 +13,8 @@ DROP TABLE IF EXISTS tb_admin;
 
 CREATE TABLE tb_user (
     id          INT AUTO_INCREMENT PRIMARY KEY COMMENT '用户 ID',
-    username    VARCHAR(50)  NOT NULL UNIQUE COMMENT '用户名',
+    username    VARCHAR(50)  NOT NULL UNIQUE COMMENT '登录用户名',
+    real_name   VARCHAR(50)  NOT NULL DEFAULT '' COMMENT '展示姓名（中文）',
     password    VARCHAR(100) NOT NULL COMMENT '登录密码',
     student_id  VARCHAR(20)  NOT NULL COMMENT '学号',
     phone       VARCHAR(20)  NOT NULL COMMENT '联系电话',
@@ -28,6 +29,7 @@ CREATE TABLE tb_user (
 CREATE TABLE tb_admin (
     id          INT AUTO_INCREMENT PRIMARY KEY COMMENT '管理员 ID',
     username    VARCHAR(50)  NOT NULL UNIQUE,
+    real_name   VARCHAR(50)  NOT NULL DEFAULT '' COMMENT '展示姓名',
     password    VARCHAR(100) NOT NULL,
     role        VARCHAR(10)  NOT NULL DEFAULT 'ADMIN',
     create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP

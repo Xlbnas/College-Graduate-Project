@@ -4,7 +4,7 @@
       <div class="left">
         <span class="badge">Admin</span>
         <strong>校园二手 · 管理后台</strong>
-        <span class="who" v-if="adminInfo">（{{ adminInfo.username }}）</span>
+        <span class="who" v-if="adminInfo">（{{ adminInfo.realName || adminInfo.username }}）</span>
       </div>
       <div class="right">
         <el-button type="text" @click="$router.push('/')">去看前台</el-button>

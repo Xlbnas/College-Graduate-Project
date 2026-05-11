@@ -7,6 +7,7 @@ import com.campus.trade.entity.User;
 import com.campus.trade.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,6 +43,13 @@ public class AuthController {
      */
     @PostMapping("/login")
     public Result login(@RequestBody User user) {
+        if (user == null || !StringUtils.hasText(user.getUsername())) {
+            return Result.error("用户名不能为空");
+        }
+        if (!StringUtils.hasText(user.getPassword())) {
+            return Result.error("密码不能为空");
+        }
+
         User loginUser = userService.findByName(user.getUsername());
 
         if (loginUser == null) {
