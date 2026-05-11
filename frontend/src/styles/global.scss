@@ -1,0 +1,32 @@
+$brand: #0f766e;
+$brand-light: #2dd4bf;
+$ink: #0f172a;
+$muted: #64748b;
+$canvas: linear-gradient(160deg, #ecfdf5 0%, #f8fafc 45%, #e0f2fe 100%);
+
+html, body, #app-root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'Noto Sans SC', 'Nunito', system-ui, -apple-system, sans-serif;
+  color: $ink;
+  background: #f5f7fa;
+  min-height: 100vh;
+}
+
+.el-card {
+  border-radius: 14px !important;
+  border: none !important;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08) !important;
+}
+
+.hero-title {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: linear-gradient(120deg, $brand 0%, $brand-light 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
