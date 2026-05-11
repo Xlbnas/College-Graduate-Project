@@ -20,9 +20,19 @@
       </el-tab-pane>
       <el-tab-pane label="我的售出" name="sold">
         <el-table :data="soldRows" size="small" v-loading="soldLoad">
-          <el-table-column prop="orderNo" label="订单号" />
+          <el-table-column prop="orderNo" label="订单号" min-width="140" />
+          <el-table-column prop="productTitle" label="商品" min-width="120" show-overflow-tooltip />
+          <el-table-column label="买家" width="100" show-overflow-tooltip>
+            <template slot-scope="{ row }">{{ row.buyerDisplayName || '—' }}</template>
+          </el-table-column>
           <el-table-column label="状态" width="100">
             <template slot-scope="{ row }">{{ orderLabel(row.status) }}</template>
+          </el-table-column>
+          <el-table-column label="买家评价" min-width="200">
+            <template slot-scope="{ row }">
+              <span v-if="row.reviewContent">{{ row.reviewContent }}</span>
+              <span v-else class="muted">—</span>
+            </template>
           </el-table-column>
           <el-table-column label="操作" width="120">
             <template slot-scope="{ row }">
@@ -104,3 +114,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.muted {
+  color: #909399;
+}
+</style>

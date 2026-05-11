@@ -143,6 +143,23 @@ WHERE image_url IS NULL OR TRIM(image_url) = '';
   info "商品演示图路径已补全。"
 }
 
+# 将内置演示商品从 /demo/*.svg 升级为 Unsplash 外链（与 database/patch_product_unsplash_demo.sql 一致）。
+upgrade_product_demo_to_remote_images() {
+  local demo_cnt
+  demo_cnt=$(mysql -N -s -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" -e \
+    "USE \`${DB_NAME}\`; SELECT COUNT(*) FROM tb_product WHERE image_url LIKE '/demo/%';" 2>/dev/null || echo 0)
+  demo_cnt=$(echo "${demo_cnt}" | tr -d ' \n\r')
+  if [[ "${demo_cnt}" == "0" ]]; then
+    return 0
+  fi
+  info "检测到 ${demo_cnt} 条商品仍使用 /demo/ 矢量图，正在替换为 Unsplash 演示照片 …"
+  mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" --default-character-set=utf8mb4 "$DB_NAME" \
+    <"$ROOT/database/schema_alter_product_image_url_len.sql" 2>/dev/null || true
+  mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" --default-character-set=utf8mb4 "$DB_NAME" \
+    <"$ROOT/database/patch_product_unsplash_demo.sql" || warn "Unsplash 图片路径升级未完全成功，可手动执行 database/patch_product_unsplash_demo.sql。"
+  info "演示商品封面已切换为外链照片。"
+}
+
 # 若目标端口已被监听，则根据 lsof 得到的 PID 自动结束进程（先 SIGTERM，仍存活再 SIGKILL）。
 check_port() {
   local port="$1"
@@ -197,6 +214,7 @@ if command -v mysql >/dev/null 2>&1; then
     info "MySQL 连接正常。"
     ensure_real_name_columns
     ensure_product_demo_images
+    upgrade_product_demo_to_remote_images
   fi
 else
   warn "未找到 mysql 客户端，已跳过数据库连通性检测。"

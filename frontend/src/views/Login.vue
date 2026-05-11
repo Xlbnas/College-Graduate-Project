@@ -2,7 +2,7 @@
   <div class="login-page">
     <div class="card">
       <h1 class="title">校园二手交易平台</h1>
-      <p class="subtitle">用户登录</p>
+      <p class="subtitle">登录</p>
       <el-form :model="form" @submit.native.prevent="submit">
         <el-form-item>
           <el-input v-model="form.username" prefix-icon="el-icon-user" placeholder="请输入用户名" clearable />
@@ -16,12 +16,8 @@
         </p>
         <div class="demo-tip">
           <div class="demo-title">测试账号</div>
-          <div>
-            管理员（后台审核）请点
-            <router-link to="/admin/login" class="link">管理登录</router-link>
-            ：<strong>admin</strong> / <strong>admin123</strong>
-          </div>
-          <div class="mt-line">本页为用户登录：<strong>zhangsan</strong> / <strong>123456</strong>，或 <strong>user1</strong> / <strong>user123</strong></div>
+          <div>学生：<strong>zhangsan</strong> / <strong>123456</strong>，或 <strong>user1</strong> / <strong>user123</strong></div>
+          <div class="mt-line">管理员：<strong>admin</strong> / <strong>admin123</strong>（同一登录页，自动进入后台）</div>
         </div>
       </el-form>
     </div>
@@ -42,13 +38,32 @@ export default {
   methods: {
     async submit() {
       this.loading = true
+      const silent = { silent: true }
       try {
-        const res = await request.post('/auth/login', this.form)
-        this.$store.commit('user/SET_AUTH', { token: res.data.token, userInfo: res.data.userInfo })
-        this.$message.success('登录成功')
-        this.$root.$emit('cart-refresh')
-        const redirect = this.$route.query.redirect || '/'
-        this.$router.replace(redirect)
+        try {
+          const res = await request.post('/auth/login', this.form, silent)
+          this.$store.commit('admin/CLEAR')
+          this.$store.commit('user/SET_AUTH', { token: res.data.token, userInfo: res.data.userInfo })
+          this.$message.success('登录成功')
+          this.$root.$emit('cart-refresh')
+          const redirect = this.$route.query.redirect || '/'
+          this.$router.replace(redirect)
+          return
+        } catch (e) {
+          /* 学生账号未命中时再尝试管理员 */
+        }
+        const adminRes = await request.post('/admin/login', this.form, silent)
+        this.$store.commit('user/CLEAR')
+        this.$store.commit('admin/SET_AUTH', { token: adminRes.data.token, adminInfo: adminRes.data.adminInfo })
+        this.$message.success('管理员登录成功')
+        const adminRedirect = this.$route.query.redirect
+        if (adminRedirect && String(adminRedirect).startsWith('/admin')) {
+          this.$router.replace(adminRedirect)
+        } else {
+          this.$router.replace('/admin/dashboard')
+        }
+      } catch (e) {
+        this.$message.error((e && e.message) || '登录失败，请检查账号密码')
       } finally {
         this.loading = false
       }

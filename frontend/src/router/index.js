@@ -17,11 +17,7 @@ const router = new Router({
       component: () => import('@/views/Register.vue'),
       meta: { title: '注册', guest: true }
     },
-    {
-      path: '/admin/login',
-      component: () => import('@/views/admin/AdminLogin.vue'),
-      meta: { title: '管理登录', guest: true }
-    },
+    { path: '/admin/login', redirect: '/login' },
     {
       path: '/',
       component: () => import('@/layouts/MainLayout.vue'),
@@ -89,18 +85,15 @@ router.beforeEach((to, from, next) => {
   const studentToken = store.state.user.token
   const adminToken = store.state.admin.token
 
-  if (to.path === '/admin/login') {
-    if (adminToken) return next('/admin/dashboard')
-    return next()
-  }
   if (['/login', '/register'].includes(to.path)) {
     if (studentToken) return next('/')
+    if (adminToken) return next('/admin/dashboard')
     return next()
   }
 
   const needAdmin = to.matched.some(r => r.meta.needAdmin)
   if (needAdmin) {
-    if (!adminToken) return next('/admin/login')
+    if (!adminToken) return next({ path: '/login', query: { redirect: to.fullPath } })
     return next()
   }
 

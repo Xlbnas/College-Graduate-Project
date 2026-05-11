@@ -5,6 +5,7 @@ import com.campus.trade.common.Result;
 import com.campus.trade.common.UserContext;
 import com.campus.trade.dto.CheckoutRequest;
 import com.campus.trade.dto.OrderRequest;
+import com.campus.trade.dto.OrderReviewRequest;
 import com.campus.trade.entity.Order;
 import com.campus.trade.entity.Product;
 import com.campus.trade.exception.BusinessException;
@@ -54,6 +55,7 @@ public class OrderController {
             Product pr = productService.getById(o.getProductId());
             o.setProductTitle(pr != null ? pr.getTitle() : "商品记录");
         }
+        orderService.fillOrderParties(p.getRecords());
         Map<String, Object> map = new HashMap<>(8);
         map.put("records", p.getRecords());
         map.put("total", p.getTotal());
@@ -94,6 +96,13 @@ public class OrderController {
         requireStudent();
         orderService.receive(id, UserContext.getUserId());
         return Result.success("已确认收货，交易完成");
+    }
+
+    @PostMapping("/{id}/review")
+    public Result review(@PathVariable Long id, @RequestBody @Valid OrderReviewRequest body) {
+        requireStudent();
+        orderService.review(id, UserContext.getUserId(), body.getContent());
+        return Result.success("评价已提交");
     }
 
     private void requireStudent() {

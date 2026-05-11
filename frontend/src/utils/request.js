@@ -28,12 +28,13 @@ service.interceptors.response.use(
       return rejectAsError('无效的响应')
     }
     const code = Number(body.code)
+    const silent = res.config && res.config.silent
     if (code === 500) {
-      Message.error(body.msg || '请求失败')
+      if (!silent) Message.error(body.msg || '请求失败')
       return rejectAsError(body.msg || '请求失败')
     }
     if (body.code != null && code !== 200) {
-      Message.error(body.msg || '请求失败')
+      if (!silent) Message.error(body.msg || '请求失败')
       return rejectAsError(body.msg || '请求失败')
     }
     return body
@@ -48,7 +49,8 @@ service.interceptors.response.use(
     } else if (err.message === 'Network Error') {
       msg = '无法连接服务器，请确认后端已启动且地址正确'
     } else if (err.message) msg = err.message
-    Message.error(msg)
+    const silent = err.config && err.config.silent
+    if (!silent) Message.error(msg)
     return rejectAsError(msg)
   }
 )

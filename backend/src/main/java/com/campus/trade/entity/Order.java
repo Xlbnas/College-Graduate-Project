@@ -46,9 +46,21 @@ public class Order {
     @TableField("pay_method")
     private String payMethod;
 
+    @TableField("review_content")
+    private String reviewContent;
+
+    @TableField("review_time")
+    private Date reviewTime;
+
     @TableField("create_time")
     private Date createTime;
 
     @TableField(exist = false)
     private String productTitle;
+
+    @TableField(exist = false)
+    private String buyerDisplayName;
+
+    @TableField(exist = false)
+    private String sellerDisplayName;
 }

@@ -7,7 +7,6 @@
         <span class="who" v-if="adminInfo">（{{ adminInfo.realName || adminInfo.username }}）</span>
       </div>
       <div class="right">
-        <el-button type="text" @click="$router.push('/')">去看前台</el-button>
         <el-button type="danger" size="mini" plain round @click="logout">退出</el-button>
       </div>
     </header>
@@ -42,7 +41,7 @@ export default {
   methods: {
     logout() {
       this.$store.commit('admin/CLEAR')
-      this.$router.replace('/admin/login')
+      this.$router.replace('/login')
     }
   }
 }

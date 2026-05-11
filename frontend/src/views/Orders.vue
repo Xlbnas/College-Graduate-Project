@@ -24,9 +24,15 @@
             <span>总计</span>
             <span class="red">¥{{ row.totalPrice }}</span>
           </div>
+          <div class="meta" v-if="row.sellerDisplayName">卖家：{{ row.sellerDisplayName }}</div>
           <div class="meta" v-if="row.address">收货地址：{{ row.address }}</div>
           <div class="meta" v-if="row.contactPhone">联系电话：{{ row.contactPhone }}</div>
           <div class="meta">下单时间：{{ fmt(row.createTime) }}</div>
+          <div v-if="row.reviewContent" class="review-box">
+            <div class="review-label">我的评价</div>
+            <div class="review-text">{{ row.reviewContent }}</div>
+            <div class="review-time">评价时间：{{ fmt(row.reviewTime) }}</div>
+          </div>
         </div>
         <div class="foot">
           <template v-if="row.status === 'WAIT_PAY'">
@@ -35,7 +41,13 @@
           </template>
           <template v-else-if="row.status === 'COMPLETED'">
             <el-button size="small" @click="$message.info('演示：可跳转商品再次购买')">再次购买</el-button>
-            <el-button type="primary" size="small" plain @click="$message.success('感谢您的评价（演示）')">评价</el-button>
+            <el-button
+              v-if="!row.reviewContent"
+              type="primary"
+              size="small"
+              plain
+              @click="openReview(row)"
+            >评价</el-button>
           </template>
           <template v-else-if="row.status === 'SHIPPED'">
             <el-button type="success" size="small" @click="recv(row)">确认收货</el-button>
@@ -44,6 +56,21 @@
       </el-card>
     </div>
     <el-empty v-if="!loading && !rows.length" description="暂无订单" />
+
+    <el-dialog title="订单评价" :visible.sync="reviewVisible" width="480px" @closed="resetReview">
+      <el-input
+        v-model="reviewForm.content"
+        type="textarea"
+        :rows="4"
+        maxlength="500"
+        show-word-limit
+        placeholder="说说本次交易体验（提交后买卖双方可见）"
+      />
+      <span slot="footer">
+        <el-button @click="reviewVisible = false">取消</el-button>
+        <el-button type="primary" :loading="reviewSubmitting" @click="submitReview">提交评价</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -53,7 +80,13 @@ import request from '@/utils/request'
 export default {
   name: 'Orders',
   data() {
-    return { rows: [], loading: false }
+    return {
+      rows: [],
+      loading: false,
+      reviewVisible: false,
+      reviewSubmitting: false,
+      reviewForm: { orderId: null, content: '' }
+    }
   },
   created() {
     this.load()
@@ -85,6 +118,32 @@ export default {
       await request.post('/orders/' + row.id + '/receive')
       this.$message.success('已确认收货')
       this.load()
+    },
+    openReview(row) {
+      this.reviewForm.orderId = row.id
+      this.reviewForm.content = ''
+      this.reviewVisible = true
+    },
+    resetReview() {
+      this.reviewForm.orderId = null
+      this.reviewForm.content = ''
+      this.reviewSubmitting = false
+    },
+    async submitReview() {
+      const text = (this.reviewForm.content || '').trim()
+      if (!text) {
+        this.$message.warning('请填写评价内容')
+        return
+      }
+      this.reviewSubmitting = true
+      try {
+        await request.post('/orders/' + this.reviewForm.orderId + '/review', { content: text })
+        this.$message.success('评价已提交')
+        this.reviewVisible = false
+        this.load()
+      } finally {
+        this.reviewSubmitting = false
+      }
     }
   }
 }
@@ -131,6 +190,29 @@ export default {
   font-size: 13px;
   color: #606266;
   margin-top: 6px;
+}
+.review-box {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #f5f7fa;
+  border-radius: 6px;
+}
+.review-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 6px;
+}
+.review-text {
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.review-time {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #909399;
 }
 .foot {
   margin-top: 14px;

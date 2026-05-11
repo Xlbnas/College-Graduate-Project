@@ -37,7 +37,6 @@
             <el-dropdown-item command="logout" divided>退出</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
-        <el-button type="text" class="admin-link" @click="$router.push('/admin/login')">管理</el-button>
       </div>
     </div>
   </header>
@@ -178,10 +177,5 @@ $blue: #409eff;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-}
-.admin-link {
-  color: rgba(255, 255, 255, 0.85) !important;
-  margin-left: 4px;
-  font-size: 13px;
 }
 </style>

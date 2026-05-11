@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 订单交易（对应论文 5.1.5：事务 + 扣减上架状态）。
@@ -27,6 +28,7 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final CartMapper cartMapper;
     private final ProductService productService;
+    private final UserService userService;
 
     /** 卖家查看涉及自己商品的订单 */
     public Page<Order> pageForSeller(Long sellerId, int pageNum, int pageSize, String status) {
@@ -139,6 +141,41 @@ public class OrderService {
         return orderMapper.selectById(id);
     }
 
+    /** 填充买卖双方展示名（优先 real_name，空则 username） */
+    public void fillOrderParties(List<Order> orders) {
+        if (orders == null || orders.isEmpty()) {
+            return;
+        }
+        Set<Long> buyerIds = orders.stream()
+                .map(Order::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, String> buyerNames = userService.usernameMap(buyerIds);
+
+        Set<Long> productIds = orders.stream()
+                .map(Order::getProductId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, Long> productSeller = new HashMap<>(productIds.size());
+        for (Long productId : productIds) {
+            Product product = productService.getById(productId);
+            if (product != null && product.getUserId() != null) {
+                productSeller.put(productId, product.getUserId());
+            }
+        }
+        Map<Long, String> sellerNames = userService.usernameMap(productSeller.values());
+
+        for (Order order : orders) {
+            if (order.getUserId() != null) {
+                order.setBuyerDisplayName(buyerNames.get(order.getUserId()));
+            }
+            Long sellerId = productSeller.get(order.getProductId());
+            if (sellerId != null) {
+                order.setSellerDisplayName(sellerNames.get(sellerId));
+            }
+        }
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public void pay(Long orderId, Long buyerId) {
         Order order = requireOrder(orderId);
@@ -180,6 +217,30 @@ public class OrderService {
             throw new BusinessException("订单状态不可确认收货");
         }
         order.setStatus("COMPLETED");
+        orderMapper.updateById(order);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void review(Long orderId, Long buyerId, String content) {
+        Order order = requireOrder(orderId);
+        if (!Objects.equals(order.getUserId(), buyerId)) {
+            throw new BusinessException("仅买家可评价该订单");
+        }
+        if (!"COMPLETED".equals(order.getStatus())) {
+            throw new BusinessException("订单完成后才能评价");
+        }
+        if (order.getReviewContent() != null && !order.getReviewContent().trim().isEmpty()) {
+            throw new BusinessException("该订单已评价");
+        }
+        String text = content == null ? "" : content.trim();
+        if (text.isEmpty()) {
+            throw new BusinessException("请填写评价内容");
+        }
+        if (text.length() > 500) {
+            throw new BusinessException("评价内容不能超过 500 字");
+        }
+        order.setReviewContent(text);
+        order.setReviewTime(new Date());
         orderMapper.updateById(order);
     }
 

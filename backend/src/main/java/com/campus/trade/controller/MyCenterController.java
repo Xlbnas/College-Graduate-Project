@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.trade.common.Result;
 import com.campus.trade.common.UserContext;
 import com.campus.trade.entity.Order;
+import com.campus.trade.entity.Product;
 import com.campus.trade.service.OrderService;
 import com.campus.trade.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,11 @@ public class MyCenterController {
             return Result.error("请使用学生账号访问");
         }
         Page<Order> p = orderService.pageForSeller(UserContext.getUserId(), pageNum, pageSize, status);
+        for (Order o : p.getRecords()) {
+            Product pr = productService.getById(o.getProductId());
+            o.setProductTitle(pr != null ? pr.getTitle() : "商品记录");
+        }
+        orderService.fillOrderParties(p.getRecords());
         Map<String, Object> map = new HashMap<>(8);
         map.put("records", p.getRecords());
         map.put("total", p.getTotal());
